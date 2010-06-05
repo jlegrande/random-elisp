@@ -1,0 +1,26 @@
+;; Delete a word
+(defun delete-a-word (num-words)
+  (interactive "p")
+  (if (and 
+       (not (looking-back "^\\|$\\|[[:space:]]"))
+       (not (looking-at "[[:space:]]")))
+      (backward-word))
+  (kill-word num-words)
+)
+
+;; Navigation shortcuts
+(defun move-to-page-middle ()
+  (interactive)
+  (move-to-window-line
+   (1- (/ (window-body-height) 2)))
+)
+
+(defun move-to-page-top ()
+  (interactive)
+  (move-to-window-line 0)
+)
+
+(defun move-to-page-bottom ()
+  (interactive)
+  (move-to-window-line (1- (window-body-height)))
+)
