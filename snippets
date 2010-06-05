@@ -2,8 +2,8 @@
 (defun delete-a-word (num-words)
   (interactive "p")
   (if (and 
-       (not (looking-back "^\\|$\\|[[:space:]]"))
-       (not (looking-at "[[:space:]]")))
+       (not (looking-back "\\W"))
+       (looking-at "\\w"))
       (backward-word))
   (kill-word num-words)
 )
