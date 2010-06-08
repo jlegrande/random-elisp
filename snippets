@@ -24,3 +24,53 @@
   (interactive)
   (move-to-window-line (1- (window-body-height)))
 )
+
+(defun kill-a-sexp (char)
+  (interactive "cOuter char: ")
+  (do-sexp-kill char nil)
+)
+
+(defun kill-inside-sexp (char)
+  (interactive "cOuter char: ")
+  (do-sexp-kill char t)
+)
+
+(defun do-sexp-kill (char, inner)
+  (save-excursion
+    (let ((orig-point (point))
+          ;; Hacky and evil
+          (sexp-start (if (and (looking-at (char-to-string char))
+                              (looking-at "\\s\("))
+                         (point)
+                       (unless (looking-at "\\s\(")
+                         (let ((tmp-point (point)))
+                           (search-backward (char-to-string char) nil t)
+                           (if (looking-at "\\s\)") 
+                               nil
+                             (if (looking-at "\\s\(")
+                                 (if (<= (scan-sexps (point) 1) tmp-point)
+                                     (progn
+                                       (forward-char)
+                                       (search-forward 
+                                        (char-to-string char) nil t)
+                                       (1- (point)))
+                                   (point))
+                               (when (looking-at (char-to-string char))
+                                 (point))))))))
+          ;; End hackiness and evilness
+          (sexp-end))
+      (if sexp-start
+          (setq sexp-end (scan-sexps sexp-start 1))
+        ;; Didn't find an opening char, so scan forward for a closing char
+        (goto-char orig-point)
+        (setq sexp-end (search-forward (char-to-string char) nil t))
+        (when (looking-back (char-to-string char))
+          (unless sexp-end
+            (setq sexp-end orig-point))
+          (setq sexp-start (scan-sexps sexp-end -1))))
+      (when (and sexp-start sexp-end)
+        (when inner
+          (setq sexp-start (1+ sexp-start))
+          (setq sexp-end (1- sexp-end)))
+        (kill-region sexp-start sexp-end)))))
+
